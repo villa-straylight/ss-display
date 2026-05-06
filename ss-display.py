@@ -2,8 +2,11 @@
 
 from PIL import Image, ImageFont, ImageDraw
 from time import sleep, monotonic
+import os
 import signal
 import sys
+
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 from functions import (
     init_config, getdevice,
