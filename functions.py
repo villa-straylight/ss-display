@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import configparser
+import re
 from easyhid import Enumeration
 from urllib.request import urlopen
 import psutil
@@ -8,6 +9,7 @@ import GPUtil
 def init_config():
     config = configparser.ConfigParser()
     config.read('config.ini')
+    return config
 
 def getdevice():
     # Stores an enumeration of all the connected USB HID devices
@@ -30,53 +32,60 @@ def getdevice():
     exit("No compatible SteelSeries devices found, exiting.")
 
 def load1():
-    round(psutil.getloadavg()[0], 3)
+    return round(psutil.getloadavg()[0], 3)
 
 def load5():
-    round(psutil.getloadavg()[1], 3)
+    return round(psutil.getloadavg()[1], 3)
 
 def load15():
-    round(psutil.getloadavg()[1], 3)
+    return round(psutil.getloadavg()[2], 3)
 
 def core_temp():
-    psutil.sensors_temperatures()['coretemp'][0].current
+    return psutil.sensors_temperatures()['coretemp'][0].current
 
 def gpu_temp():
     try:
-        GPUtil.getGPUs()[0].temperature
+        return GPUtil.getGPUs()[0].temperature
     except:
-        print("No GPU")
+        return None
 
 def swap_use():
-    round(psutil.swap_memory()[1]/1048576)
+    return round(psutil.swap_memory()[1]/1048576)
 
 def swap_percent():
-    psutil.swap_memory()[3]
+    return psutil.swap_memory()[3]
 
 def mem_used():
-    round(psutil.virtual_memory()[3]/1048576)
+    return round(psutil.virtual_memory()[3]/1048576)
 
 def mem_used_percent():
-    psutil.virtual_memory()[2]
+    return psutil.virtual_memory()[2]
 
 def mem_total():
-    round(psutil.virtual_memory()[0]/1048576)
+    return round(psutil.virtual_memory()[0]/1048576)
 
 def cpu_freq():
-    psutil.cpu_freq()[0]
+    return psutil.cpu_freq()[0]
 
 def cpu_count():
-    psutil.cpu_count()
+    return psutil.cpu_count()
 
 def ext_ip():
     d = str(urlopen('http://checkip.dyndns.com/').read())
-    return r.compile(r'Address: (\d+\.\d+\.\d+\.\d+)').search(d).group(1)
+    return re.compile(r'Address: (\d+\.\d+\.\d+\.\d+)').search(d).group(1)
 
-def draw_init():
+def draw_init(draw):
     draw.rectangle([(0,0),(128,40)], fill=0)
 
-def draw_text_3(stat_one, stat_two, stat_three):
+def draw_text_3(draw, font, stat_one, stat_two, stat_three):
+    draw.text((1,  1), stat_one,   font=font, fill=255)
+    draw.text((1, 11), stat_two,   font=font, fill=255)
+    draw.text((1, 21), stat_three, font=font, fill=255)
 
-def draw_text_4(stat_one, stat_two, stat_three, stat_four):
+def draw_text_4(draw, font, stat_one, stat_two, stat_three, stat_four):
+    draw.text((1,  1), stat_one,   font=font, fill=255)
+    draw.text((1, 11), stat_two,   font=font, fill=255)
+    draw.text((1, 21), stat_three, font=font, fill=255)
+    draw.text((1, 31), stat_four,  font=font, fill=255)
 
         
