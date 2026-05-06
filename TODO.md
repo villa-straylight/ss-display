@@ -12,3 +12,9 @@ A whole bunch of stuff in no particular order as I figure out what needs to be d
 - [x] Write sample systemd unit
 - [x] Write sample .desktop file
 - [x] Document things where human can understand it
+- [x] Convert config from INI to YAML
+- [x] Optimize sensor polling (TTL cache to batch psutil syscalls)
+- [x] Support AMD and Intel Xe/Arc GPU temperature
+- [x] Support AMD CPU temperature (k10temp, zenpower)
+- [x] Harden sensor functions against unsupported hardware
+- [ ] Test and verify AMD GPU temperature support
