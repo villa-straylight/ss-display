@@ -21,7 +21,7 @@ pip install -r requirements.txt
 
 ### System stats display
 
-Configure which sensors to show in `config.ini`, then run:
+Configure which sensors to show in `config.yaml`, then run:
 
 ```bash
 python3 ss-display.py
@@ -31,42 +31,62 @@ Enabled sensors are grouped into pages of 3 (font size 12) or 4 (font size 10) l
 
 ## Configuration
 
-All options live in `config.ini`.
+All options live in `config.yaml`.
 
-### [Appearance]
+### appearance
 
 | Key | Description | Default |
 |-----|-------------|---------|
-| `Font` | TrueType font file (must be in the same directory) | `SpaceMono-Regular.ttf` |
-| `Size` | Font size. 12 fits 3 lines, 10 fits 4 lines | `12` |
-| `Delay` | Seconds to show each page before rotating | `2` |
-| `Image` | Path to an image or GIF to display as a rotating page (PNG, JPEG, GIF, etc.) | _(blank)_ |
+| `font` | TrueType font file (must be in the same directory) | `SpaceMono-Regular.ttf` |
+| `size` | Font size. 12 fits 3 lines, 10 fits 4 lines | `12` |
+| `delay` | Seconds to show each page before rotating | `2` |
+| `image` | Path to an image or GIF to display as a rotating page (PNG, JPEG, GIF, etc.) | _(blank)_ |
 
-### [Sensors]
+### sensors
 
-Set any sensor to `True` to enable it. Sensors are displayed in the order listed.
+Set any sensor to `true` to enable it. Sensors are displayed in the order listed.
 
 | Key | Description |
 |-----|-------------|
-| `CpuPercent` | CPU utilisation % |
-| `Load1` | 1-minute load average |
-| `Load5` | 5-minute load average |
-| `Load15` | 15-minute load average |
-| `CoreTemp` | CPU core temperature (°C) |
-| `GpuTemp` | GPU temperature (°C) |
-| `CpuFreq` | Current CPU frequency (MHz) |
-| `CpuMax` | Maximum CPU frequency (MHz) |
-| `CpuCount` | CPU core count |
-| `MemUsed` | Memory used (MiB) |
-| `MemFree` | Memory free (MiB) |
-| `MemTotal` | Total memory (MiB) |
-| `MemUsedPercent` | Memory used % |
-| `Swap` | Swap used (MiB) |
-| `SwapPercent` | Swap used % |
-| `Battery` | Battery level and charge state (e.g. `85%+`) |
-| `DiskUsage` | Usage % for each local mounted filesystem (ext2/3/4, btrfs, xfs, zfs, ntfs, etc.) |
-| `FanSpeeds` | RPM for all available fans |
-| `ExternalIP` | External IP address |
+| `cpu_percent` | CPU utilisation % |
+| `load1` | 1-minute load average |
+| `load5` | 5-minute load average |
+| `load15` | 15-minute load average |
+| `core_temp` | CPU core temperature (°C) |
+| `gpu_temp` | GPU temperature (°C) |
+| `cpu_freq` | Current CPU frequency (MHz) |
+| `cpu_max` | Maximum CPU frequency (MHz) |
+| `cpu_count` | CPU core count |
+| `mem_used` | Memory used (MiB) |
+| `mem_free` | Memory free (MiB) |
+| `mem_total` | Total memory (MiB) |
+| `mem_used_percent` | Memory used % |
+| `swap` | Swap used (MiB) |
+| `swap_percent` | Swap used % |
+| `battery` | Battery level and charge state (e.g. `85%+`) |
+| `disk_usage` | Usage % for each local mounted filesystem (ext2/3/4, btrfs, xfs, zfs, ntfs, etc.) |
+| `fan_speeds` | RPM for all available fans |
+| `external_ip` | External IP address |
+
+## Hardware compatibility
+
+### CPU temperature
+
+Auto-detected for Intel (`coretemp`), AMD via `k10temp` (prefers `Tdie` over `Tctl` to avoid the +27°C offset on early Ryzen), and AMD via the `zenpower` driver.
+
+### GPU temperature
+
+| GPU | Status |
+|-----|--------|
+| NVIDIA | Tested — via GPUtil |
+| Intel Xe / Arc | Tested — via `xe` sensor |
+| AMD | Untested — implemented based on documented `amdgpu` sensor labels |
+
+AMD GPU support has not been tested against real hardware. If `gpu_temp` shows nothing or wrong values on your AMD GPU, please open an issue and include the output of:
+
+```bash
+python3 -c "import psutil; [print(k, [(e.label, e.current) for e in v]) for k,v in psutil.sensors_temperatures().items()]"
+```
 
 ## Running as a service
 
