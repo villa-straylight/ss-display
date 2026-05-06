@@ -6,7 +6,7 @@ import os
 import signal
 import sys
 
-os.chdir(os.path.dirname(os.path.abspath(__file__)))
+SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 
 from functions import (
     init_config, getdevice,
@@ -22,8 +22,8 @@ from functions import (
     draw_init, draw_text_3, draw_text_4,
 )
 
-config = init_config()
-font_file = config.get('Appearance', 'Font', fallback='SpaceMono-Regular.ttf').strip('"')
+config = init_config(os.path.join(SCRIPT_DIR, 'config.ini'))
+font_file = os.path.join(SCRIPT_DIR, config.get('Appearance', 'Font', fallback='SpaceMono-Regular.ttf').strip('"'))
 font_size = config.getint('Appearance', 'Size', fallback=12)
 delay = config.getfloat('Appearance', 'Delay', fallback=2)
 lines_per_page = 3 if font_size >= 12 else 4
@@ -66,6 +66,7 @@ gif_frames = []
 gif_sleeptime = 0
 gif_path = config.get('Appearance', 'GIF', fallback='').strip('"').strip()
 if gif_path:
+    gif_path = os.path.join(SCRIPT_DIR, gif_path)
     try:
         gif_frames, gif_sleeptime = load_gif(gif_path)
     except Exception as e:

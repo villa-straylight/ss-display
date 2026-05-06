@@ -8,9 +8,9 @@ from PIL import Image, ImageSequence
 import psutil
 import GPUtil
 
-def init_config():
+def init_config(path='config.ini'):
     config = configparser.ConfigParser()
-    config.read('config.ini')
+    config.read(path)
     return config
 
 def getdevice():
