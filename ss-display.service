@@ -1,0 +1,14 @@
+[Unit]
+Description=SteelSeries OLED display stats
+# Wait for the HID device to be available
+After=systemd-udev-settle.service
+
+[Service]
+Type=simple
+WorkingDirectory=%h/projects/ss-display/ss-display
+ExecStart=/usr/bin/python3 ss-display.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
