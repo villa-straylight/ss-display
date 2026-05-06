@@ -88,7 +88,7 @@ def blank():
     dev.send_feature_report(bytearray([0x61] + [0x00] * 641))
 
 while True:
-    if not enabled:
+    if not enabled and not gif_frames:
         sleep(delay)
         continue
 
