@@ -1,5 +1,7 @@
 # ss-display
 
+![W.gif](W.gif)
+
 A Python utility for displaying system stats and GIF animations on the OLED screen of supported SteelSeries keyboards. Forked from [steelseries-oled](https://github.com/edbgon/steelseries-oled).
 
 ## Supported Devices
@@ -25,25 +27,7 @@ Configure which sensors to show in `config.ini`, then run:
 python3 ss-display.py
 ```
 
-Enabled sensors are grouped into pages of 3 (font size 12) or 4 (font size 10) lines and rotate automatically on the configured delay.
-
-### GIF / image display
-
-```bash
-python3 oled.py image.gif
-```
-
-Supports animated GIFs and static images. Use `none` to blank the screen:
-
-```bash
-python3 oled.py none
-```
-
-### Profile switching
-
-```bash
-python3 profile.py [1-5]
-```
+Enabled sensors are grouped into pages of 3 (font size 12) or 4 (font size 10) lines and rotate automatically on the configured delay. A GIF can also be added as a rotating page — `W.gif` is included as an example.
 
 ## Configuration
 
