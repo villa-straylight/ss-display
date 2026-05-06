@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from PIL import Image, ImageFont, ImageDraw
-from time import sleep
+from time import sleep, monotonic
 import signal
 import sys
 
@@ -13,6 +13,7 @@ from functions import (
     mem_used, mem_free, mem_total, mem_used_percent,
     swap_use, swap_percent,
     ext_ip,
+    load_gif,
     draw_init, draw_text_3, draw_text_4,
 )
 
@@ -48,6 +49,15 @@ enabled = [
     for key, fmt, fn in SENSOR_MAP
     if config.getboolean('Sensors', key, fallback=False)
 ]
+
+gif_frames = []
+gif_sleeptime = 0
+gif_path = config.get('Appearance', 'GIF', fallback='').strip('"').strip()
+if gif_path:
+    try:
+        gif_frames, gif_sleeptime = load_gif(gif_path)
+    except Exception as e:
+        print("Could not load GIF: {}".format(e))
 
 dev = getdevice()
 
@@ -95,6 +105,16 @@ while True:
         draw_fn(draw, font, *lines)
         send_frame()
         sleep(delay)
+        blank()
+        sleep(0.05)
+
+    if gif_frames:
+        end = monotonic() + delay
+        idx = 0
+        while monotonic() < end:
+            dev.send_feature_report(gif_frames[idx % len(gif_frames)])
+            sleep(gif_sleeptime)
+            idx += 1
         blank()
         sleep(0.05)
 

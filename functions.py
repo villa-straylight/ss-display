@@ -3,6 +3,7 @@ import configparser
 import re
 from easyhid import Enumeration
 from urllib.request import urlopen
+from PIL import Image, ImageSequence
 import psutil
 import GPUtil
 
@@ -82,6 +83,17 @@ def cpu_count():
 def ext_ip():
     d = str(urlopen('http://checkip.dyndns.com/').read())
     return re.compile(r'Address: (\d+\.\d+\.\d+\.\d+)').search(d).group(1)
+
+def load_gif(path):
+    im = Image.open(path)
+    frames = []
+    last_frame = None
+    for frame in ImageSequence.Iterator(im):
+        last_frame = frame
+        frame = frame.resize((128, 40)).convert('1')
+        frames.append(bytearray([0x61]) + frame.tobytes() + bytearray([0x00]))
+    sleeptime = last_frame.info.get('duration', 1000) / 1000
+    return frames, sleeptime
 
 def draw_init(draw):
     draw.rectangle([(0,0),(128,40)], fill=0)
