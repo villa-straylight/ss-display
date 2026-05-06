@@ -55,6 +55,9 @@ def swap_use():
 def swap_percent():
     return psutil.swap_memory()[3]
 
+def mem_free():
+    return round(psutil.virtual_memory()[1]/1048576)
+
 def mem_used():
     return round(psutil.virtual_memory()[3]/1048576)
 
@@ -64,8 +67,14 @@ def mem_used_percent():
 def mem_total():
     return round(psutil.virtual_memory()[0]/1048576)
 
+def cpu_percent():
+    return psutil.cpu_percent(interval=1)
+
 def cpu_freq():
     return psutil.cpu_freq()[0]
+
+def cpu_max():
+    return psutil.cpu_freq().max
 
 def cpu_count():
     return psutil.cpu_count()

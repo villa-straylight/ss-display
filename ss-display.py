@@ -4,19 +4,50 @@ from PIL import Image, ImageFont, ImageDraw
 from time import sleep
 import signal
 import sys
-import psutil
 
 from functions import (
     init_config, getdevice,
-    core_temp, load1, cpu_freq, cpu_count,
-    mem_used, swap_use,
-    draw_init, draw_text_3,
+    cpu_percent, cpu_freq, cpu_max, cpu_count,
+    core_temp, gpu_temp,
+    load1, load5, load15,
+    mem_used, mem_free, mem_total, mem_used_percent,
+    swap_use, swap_percent,
+    ext_ip,
+    draw_init, draw_text_3, draw_text_4,
 )
 
 config = init_config()
 font_file = config.get('Appearance', 'Font', fallback='SpaceMono-Regular.ttf').strip('"')
 font_size = config.getint('Appearance', 'Size', fallback=12)
 delay = config.getfloat('Appearance', 'Delay', fallback=2)
+lines_per_page = 3 if font_size >= 12 else 4
+draw_fn = draw_text_3 if lines_per_page == 3 else draw_text_4
+
+# Ordered list of (config key, format string, stat function)
+SENSOR_MAP = [
+    ('CpuPercent',     'CPU: {:.0f}%',         cpu_percent),
+    ('Load1',          'Load1: {}',             load1),
+    ('Load5',          'Load5: {}',             load5),
+    ('Load15',         'Load15: {}',            load15),
+    ('CoreTemp',       'CPU temp: {}C',         core_temp),
+    ('GpuTemp',        'GPU temp: {}C',         gpu_temp),
+    ('CpuFreq',        'CPU Freq: {:.0f}MHz',   cpu_freq),
+    ('CpuMax',         'CPU Max: {:.0f}MHz',    cpu_max),
+    ('CpuCount',       'CPU cores: {}',         cpu_count),
+    ('MemUsed',        'Mem: {}MiB',            mem_used),
+    ('MemFree',        'MemFree: {}MiB',        mem_free),
+    ('MemTotal',       'MemTotal: {}MiB',       mem_total),
+    ('MemUsedPercent', 'Mem: {}%',              mem_used_percent),
+    ('Swap',           'Swap: {}MiB',           swap_use),
+    ('SwapPercent',    'Swap: {}%',             swap_percent),
+    ('ExternalIP',     'IP: {}',                ext_ip),
+]
+
+enabled = [
+    (fmt, fn)
+    for key, fmt, fn in SENSOR_MAP
+    if config.getboolean('Sensors', key, fallback=False)
+]
 
 dev = getdevice()
 
@@ -40,29 +71,31 @@ im = Image.new('1', (128, 40))
 draw = ImageDraw.Draw(im)
 font = ImageFont.truetype(font_file, font_size)
 
-while True:
-    # Screen 1: CPU stats
-    draw_init(draw)
-    draw_text_3(
-        draw, font,
-        "CPU: {:2.0f}%, {:2d} cores".format(psutil.cpu_percent(interval=1), cpu_count()),
-        "CPU temp: {0}C".format(core_temp()),
-        "Load: {0}".format(load1()),
-    )
+def send_frame():
     dev.send_feature_report(bytearray([0x61]) + im.tobytes() + bytearray([0x00]))
-    sleep(delay)
 
-    # Screen 2: Memory stats
+def blank():
     dev.send_feature_report(bytearray([0x61] + [0x00] * 641))
-    sleep(0.05)
-    draw_init(draw)
-    draw_text_3(
-        draw, font,
-        "CPU Freq: {:4.0f}MHz".format(cpu_freq()),
-        "Memory: {0}MiB".format(mem_used()),
-        "Swap: {0}MiB".format(swap_use()),
-    )
-    dev.send_feature_report(bytearray([0x61]) + im.tobytes() + bytearray([0x00]))
-    sleep(delay)
+
+while True:
+    if not enabled:
+        sleep(delay)
+        continue
+
+    pages = [enabled[i:i + lines_per_page] for i in range(0, len(enabled), lines_per_page)]
+
+    for page in pages:
+        draw_init(draw)
+        lines = []
+        for fmt, fn in page:
+            val = fn()
+            lines.append(fmt.format(val) if val is not None else "")
+        while len(lines) < lines_per_page:
+            lines.append("")
+        draw_fn(draw, font, *lines)
+        send_frame()
+        sleep(delay)
+        blank()
+        sleep(0.05)
 
 dev.close()
