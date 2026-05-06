@@ -130,7 +130,7 @@ def get_fan_sensors():
             sensors.append((fmt, make_fn(name, i)))
     return sensors
 
-def load_gif(path):
+def load_image(path):
     im = Image.open(path)
     frames = []
     last_frame = None

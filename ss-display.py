@@ -18,7 +18,7 @@ from functions import (
     ext_ip,
     battery,
     get_local_disk_sensors, get_fan_sensors,
-    load_gif,
+    load_image,
     draw_init, draw_text_3, draw_text_4,
 )
 
@@ -62,15 +62,15 @@ if config.getboolean('Sensors', 'DiskUsage', fallback=False):
 if config.getboolean('Sensors', 'FanSpeeds', fallback=False):
     enabled.extend(get_fan_sensors())
 
-gif_frames = []
-gif_sleeptime = 0
-gif_path = config.get('Appearance', 'GIF', fallback='').strip('"').strip()
-if gif_path:
-    gif_path = os.path.join(SCRIPT_DIR, gif_path)
+image_frames = []
+image_sleeptime = 0
+image_path = config.get('Appearance', 'Image', fallback='').strip('"').strip()
+if image_path:
+    image_path = os.path.join(SCRIPT_DIR, image_path)
     try:
-        gif_frames, gif_sleeptime = load_gif(gif_path)
+        image_frames, image_sleeptime = load_image(image_path)
     except Exception as e:
-        print("Could not load GIF: {}".format(e))
+        print("Could not load image: {}".format(e))
 
 dev = getdevice()
 
@@ -101,7 +101,7 @@ def blank():
     dev.send_feature_report(bytearray([0x61] + [0x00] * 641))
 
 while True:
-    if not enabled and not gif_frames:
+    if not enabled and not image_frames:
         sleep(delay)
         continue
 
@@ -121,12 +121,12 @@ while True:
         blank()
         sleep(0.05)
 
-    if gif_frames:
+    if image_frames:
         end = monotonic() + delay
         idx = 0
         while monotonic() < end:
-            dev.send_feature_report(gif_frames[idx % len(gif_frames)])
-            sleep(gif_sleeptime)
+            dev.send_feature_report(image_frames[idx % len(image_frames)])
+            sleep(image_sleeptime)
             idx += 1
         blank()
         sleep(0.05)

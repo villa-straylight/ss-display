@@ -27,7 +27,7 @@ Configure which sensors to show in `config.ini`, then run:
 python3 ss-display.py
 ```
 
-Enabled sensors are grouped into pages of 3 (font size 12) or 4 (font size 10) lines and rotate automatically on the configured delay. A GIF can also be added as a rotating page — `W.gif` is included as an example.
+Enabled sensors are grouped into pages of 3 (font size 12) or 4 (font size 10) lines and rotate automatically on the configured delay. An image or GIF can also be added as a rotating page — `W.gif` is included as an example.
 
 ## Configuration
 
@@ -40,7 +40,7 @@ All options live in `config.ini`.
 | `Font` | TrueType font file (must be in the same directory) | `SpaceMono-Regular.ttf` |
 | `Size` | Font size. 12 fits 3 lines, 10 fits 4 lines | `12` |
 | `Delay` | Seconds to show each page before rotating | `2` |
-| `GIF` | Path to a GIF or image to display as a rotating page | _(blank)_ |
+| `Image` | Path to an image or GIF to display as a rotating page (PNG, JPEG, GIF, etc.) | _(blank)_ |
 
 ### [Sensors]
 
