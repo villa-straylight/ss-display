@@ -10,6 +10,9 @@ import psutil
 import GPUtil
 
 
+# Cache wrapper: calls the wrapped function at most once per `ttl` seconds.
+# Used below so that related sensors (e.g. load1/load5/load15) share a single
+# syscall per display tick rather than each making their own.
 def _ttl_cache(ttl):
     def decorator(fn):
         result = [None]
@@ -24,6 +27,8 @@ def _ttl_cache(ttl):
     return decorator
 
 
+# Cached psutil calls — multiple sensor functions read from the same underlying
+# data source, so we fetch it once per tick (0.5s window) instead of once per sensor.
 _getloadavg          = _ttl_cache(0.5)(psutil.getloadavg)
 _swap_memory         = _ttl_cache(0.5)(psutil.swap_memory)
 _virtual_memory      = _ttl_cache(0.5)(psutil.virtual_memory)
@@ -136,6 +141,8 @@ def cpu_percent():
     return psutil.cpu_percent(interval=1)
 
 def cpu_freq():
+    # /proc/cpuinfo reflects the actual current frequency including turbo/throttle;
+    # psutil.cpu_freq() returns a cached or nominal value on some kernels.
     with open('/proc/cpuinfo') as f:
         for line in f:
             if line.startswith('cpu MHz'):
@@ -180,6 +187,8 @@ def get_local_disk_sensors():
         mount = part.mountpoint
         label = os.path.basename(mount) or '/'
         fmt = "{}: {{:.0f}}%".format(label)
+        # m=mount captures the current value of mount; without it, all lambdas
+        # would close over the same variable and return data for the last mount only.
         fn = lambda m=mount: psutil.disk_usage(m).percent if os.path.ismount(m) else None
         sensors.append((fmt, fn))
     return sensors

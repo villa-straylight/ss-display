@@ -96,6 +96,8 @@ im = Image.new('1', (128, 40))
 draw = ImageDraw.Draw(im)
 font = ImageFont.truetype(font_file, font_size)
 
+# HID feature report format: 1 byte report ID (0x61) + 640 bytes of pixel data
+# (128×40 pixels at 1 bit each = 640 bytes) + 1 byte terminator = 642 bytes total.
 def send_frame():
     dev.send_feature_report(bytearray([0x61]) + im.tobytes() + bytearray([0x00]))
 
@@ -121,7 +123,7 @@ while True:
         send_frame()
         sleep(delay)
         blank()
-        sleep(0.05)
+        sleep(0.05)  # brief pause to let the HID report complete before the next send
 
     if image_frames:
         end = monotonic() + delay
@@ -131,6 +133,6 @@ while True:
             sleep(image_sleeptime)
             idx += 1
         blank()
-        sleep(0.05)
+        sleep(0.05)  # brief pause to let the HID report complete before the next send
 
 dev.close()
