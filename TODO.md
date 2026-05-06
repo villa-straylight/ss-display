@@ -10,5 +10,5 @@ A whole bunch of stuff in no particular order as I figure out what needs to be d
 - [x] Combine image and text functionality
 - [x] Write requirements.txt
 - [x] Write sample systemd unit
-- [ ] Write sample .desktop file
+- [x] Write sample .desktop file
 - [x] Document things where human can understand it
