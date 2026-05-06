@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=ss-display
+Comment=SteelSeries OLED display stats
+Exec=/usr/bin/python3 /home/user/apps/ss-display/ss-display.py
+Terminal=false
+Categories=Utility;
+

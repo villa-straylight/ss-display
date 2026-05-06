@@ -70,10 +70,22 @@ Set any sensor to `True` to enable it. Sensors are displayed in the order listed
 
 ## Running as a service
 
-A sample systemd user service is included:
+A sample systemd user service is included. Update `WorkingDirectory` to match your install path:
 
 ```bash
 cp ss-display.service ~/.config/systemd/user/
 systemctl --user daemon-reload
 systemctl --user enable --now ss-display
+```
+
+## Autostart / app launcher
+
+A sample `.desktop` file is included. Update the `Exec` path to match your install location, then copy it to the appropriate directory:
+
+```bash
+# autostart on login
+cp ss-display.desktop ~/.config/autostart/
+
+# or add to the app launcher
+cp ss-display.desktop ~/.local/share/applications/
 ```
