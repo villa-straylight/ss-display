@@ -17,4 +17,5 @@ A whole bunch of stuff in no particular order as I figure out what needs to be d
 - [x] Support AMD and Intel Xe/Arc GPU temperature
 - [x] Support AMD CPU temperature (k10temp, zenpower)
 - [x] Harden sensor functions against unsupported hardware
+- [x] Switch external IP lookup to HTTPS with timeout
 - [ ] Test and verify AMD GPU temperature support
