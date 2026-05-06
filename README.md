@@ -109,3 +109,49 @@ cp ss-display.desktop ~/.config/autostart/
 # or add to the app launcher
 cp ss-display.desktop ~/.local/share/applications/
 ```
+
+## Changelog
+
+### 2026-05-06
+
+#### Security
+- External IP lookup switched from HTTP to HTTPS (`api.ipify.org`) to prevent MITM on untrusted networks
+- Added 5-second timeout to external IP request so a slow or unreachable server can't freeze the display
+
+#### Added
+- CPU temperature auto-detection for AMD systems: `k10temp` driver (prefers `Tdie` over `Tctl` to avoid the +27°C offset on early Ryzen) and `zenpower` driver
+- GPU temperature support for AMD (`amdgpu` sensor, `edge`/`junction` labels) and Intel Xe/Arc (`xe` sensor, `pkg` label), alongside existing NVIDIA support via GPUtil
+
+#### Changed
+- Config format converted from INI (`config.ini`) to YAML (`config.yaml`); sensor keys are now `snake_case`
+- Sensor polling optimized: related psutil calls cached per tick to avoid redundant syscalls when multiple sensors share the same data source
+- External IP result cached for 5 minutes (was fetched every tick)
+
+#### Fixed
+- `core_temp` no longer crashes on AMD systems
+- `cpu_freq` and `cpu_max` no longer crash on systems where `psutil.cpu_freq()` returns `None`
+- Disk usage sensor guards against filesystems unmounted after startup
+- Config lookups hardened against blank YAML values
+
+---
+
+### 2026-05-05
+
+#### Added
+- Disk usage, battery, and fan speed sensors
+- Image and GIF support as a rotating display page
+- Config-driven sensor selection
+- Sample systemd user service unit and `.desktop` file
+- `requirements.txt`
+
+#### Changed
+- Refactored into `ss-display.py` + `functions.py`
+- Paths use `realpath`-anchored resolution instead of `chdir`
+
+---
+
+### Upstream (forked from [steelseries-oled](https://github.com/edbgon/steelseries-oled))
+
+- Apex Pro and Apex 7 TKL support
+- SIGTERM handling
+- Static image display and screen blanking
