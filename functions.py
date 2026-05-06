@@ -1,17 +1,38 @@
 #!/usr/bin/env python3
-import configparser
 import os
 import re
+import yaml
+from time import monotonic
 from easyhid import Enumeration
 from urllib.request import urlopen
 from PIL import Image, ImageSequence
 import psutil
 import GPUtil
 
-def init_config(path='config.ini'):
-    config = configparser.ConfigParser()
-    config.read(path)
-    return config
+
+def _ttl_cache(ttl):
+    def decorator(fn):
+        result = [None]
+        expires = [0.0]
+        def wrapper():
+            now = monotonic()
+            if now >= expires[0]:
+                result[0] = fn()
+                expires[0] = now + ttl
+            return result[0]
+        return wrapper
+    return decorator
+
+
+_getloadavg          = _ttl_cache(0.5)(psutil.getloadavg)
+_swap_memory         = _ttl_cache(0.5)(psutil.swap_memory)
+_virtual_memory      = _ttl_cache(0.5)(psutil.virtual_memory)
+_sensors_fans_all    = _ttl_cache(0.5)(psutil.sensors_fans)
+_sensors_temps_all   = _ttl_cache(0.5)(psutil.sensors_temperatures)
+
+def init_config(path='config.yaml'):
+    with open(path) as f:
+        return yaml.safe_load(f)
 
 def getdevice():
     # Stores an enumeration of all the connected USB HID devices
@@ -34,40 +55,82 @@ def getdevice():
     exit("No compatible SteelSeries devices found, exiting.")
 
 def load1():
-    return round(psutil.getloadavg()[0], 3)
+    return round(_getloadavg()[0], 3)
 
 def load5():
-    return round(psutil.getloadavg()[1], 3)
+    return round(_getloadavg()[1], 3)
 
 def load15():
-    return round(psutil.getloadavg()[2], 3)
+    return round(_getloadavg()[2], 3)
+
+def _pick_temp(entries, *preferred_labels):
+    for label in preferred_labels:
+        match = next((e for e in entries if e.label == label), None)
+        if match:
+            return match.current
+    return entries[0].current if entries else None
 
 def core_temp():
-    return psutil.sensors_temperatures()['coretemp'][0].current
-
-def gpu_temp():
     try:
-        return GPUtil.getGPUs()[0].temperature
-    except:
+        temps = _sensors_temps_all()
+    except Exception:
         return None
 
+    # Intel
+    if temps.get('coretemp'):
+        return temps['coretemp'][0].current
+
+    # AMD (k10temp driver) — prefer Tdie (no offset) over Tctl (+27°C on early Ryzen)
+    if temps.get('k10temp'):
+        return _pick_temp(temps['k10temp'], 'Tdie', 'Tctl')
+
+    # AMD (zenpower driver, alternative to k10temp)
+    if temps.get('zenpower'):
+        return _pick_temp(temps['zenpower'], 'TDIE')
+
+    return None
+
+def gpu_temp():
+    # NVIDIA
+    try:
+        gpus = GPUtil.getGPUs()
+        if gpus:
+            return gpus[0].temperature
+    except Exception:
+        pass
+
+    try:
+        temps = _sensors_temps_all()
+    except Exception:
+        return None
+
+    # AMD GPU — edge is die temp, junction is hotspot
+    if temps.get('amdgpu'):
+        return _pick_temp(temps['amdgpu'], 'edge', 'junction')
+
+    # Intel Xe / Arc
+    if temps.get('xe'):
+        return _pick_temp(temps['xe'], 'pkg')
+
+    return None
+
 def swap_use():
-    return round(psutil.swap_memory()[1]/1048576)
+    return round(_swap_memory()[1]/1048576)
 
 def swap_percent():
-    return psutil.swap_memory()[3]
+    return _swap_memory()[3]
 
 def mem_free():
-    return round(psutil.virtual_memory()[1]/1048576)
+    return round(_virtual_memory()[1]/1048576)
 
 def mem_used():
-    return round(psutil.virtual_memory()[3]/1048576)
+    return round(_virtual_memory()[3]/1048576)
 
 def mem_used_percent():
-    return psutil.virtual_memory()[2]
+    return _virtual_memory()[2]
 
 def mem_total():
-    return round(psutil.virtual_memory()[0]/1048576)
+    return round(_virtual_memory()[0]/1048576)
 
 def cpu_percent():
     return psutil.cpu_percent(interval=1)
@@ -77,17 +140,26 @@ def cpu_freq():
         for line in f:
             if line.startswith('cpu MHz'):
                 return float(line.split(':')[1].strip())
-    return psutil.cpu_freq()[0]
+    freq = psutil.cpu_freq()
+    return freq[0] if freq else None
 
 def cpu_max():
-    return psutil.cpu_freq().max
+    freq = psutil.cpu_freq()
+    return freq.max if freq else None
 
 def cpu_count():
     return psutil.cpu_count()
 
+_EXT_IP_RE = re.compile(r'Address: (\d+\.\d+\.\d+\.\d+)')
+
+@_ttl_cache(300)
 def ext_ip():
-    d = str(urlopen('http://checkip.dyndns.com/').read())
-    return re.compile(r'Address: (\d+\.\d+\.\d+\.\d+)').search(d).group(1)
+    try:
+        d = str(urlopen('http://checkip.dyndns.com/').read())
+        m = _EXT_IP_RE.search(d)
+        return m.group(1) if m else None
+    except Exception:
+        return None
 
 def battery():
     b = psutil.sensors_battery()
@@ -108,14 +180,14 @@ def get_local_disk_sensors():
         mount = part.mountpoint
         label = os.path.basename(mount) or '/'
         fmt = "{}: {{:.0f}}%".format(label)
-        fn = lambda m=mount: psutil.disk_usage(m).percent
+        fn = lambda m=mount: psutil.disk_usage(m).percent if os.path.ismount(m) else None
         sensors.append((fmt, fn))
     return sensors
 
 def get_fan_sensors():
     def make_fn(name, idx):
         def fn():
-            entries = psutil.sensors_fans().get(name, [])
+            entries = _sensors_fans_all().get(name, [])
             return entries[idx].current if idx < len(entries) else None
         return fn
 

@@ -22,48 +22,51 @@ from functions import (
     draw_init, draw_text_3, draw_text_4,
 )
 
-config = init_config(os.path.join(SCRIPT_DIR, 'config.ini'))
-font_file = os.path.join(SCRIPT_DIR, config.get('Appearance', 'Font', fallback='SpaceMono-Regular.ttf').strip('"'))
-font_size = config.getint('Appearance', 'Size', fallback=12)
-delay = config.getfloat('Appearance', 'Delay', fallback=2)
+config = init_config(os.path.join(SCRIPT_DIR, 'config.yaml'))
+appearance = config.get('appearance') or {}
+sensors = config.get('sensors') or {}
+
+font_file = os.path.join(SCRIPT_DIR, appearance.get('font') or 'SpaceMono-Regular.ttf')
+font_size = appearance.get('size') or 12
+delay = appearance.get('delay') or 2
 lines_per_page = 3 if font_size >= 12 else 4
 draw_fn = draw_text_3 if lines_per_page == 3 else draw_text_4
 
 SENSOR_MAP = [
-    ('CpuPercent',     'CPU: {:.0f}%',         cpu_percent),
-    ('Load1',          'Load1: {}',             load1),
-    ('Load5',          'Load5: {}',             load5),
-    ('Load15',         'Load15: {}',            load15),
-    ('CoreTemp',       'CPU temp: {}C',         core_temp),
-    ('GpuTemp',        'GPU temp: {}C',         gpu_temp),
-    ('CpuFreq',        'CPU Freq: {:.0f}MHz',   cpu_freq),
-    ('CpuMax',         'CPU Max: {:.0f}MHz',    cpu_max),
-    ('CpuCount',       'CPU cores: {}',         cpu_count),
-    ('MemUsed',        'Mem: {}MiB',            mem_used),
-    ('MemFree',        'MemFree: {}MiB',        mem_free),
-    ('MemTotal',       'MemTotal: {}MiB',       mem_total),
-    ('MemUsedPercent', 'Mem: {}%',              mem_used_percent),
-    ('Swap',           'Swap: {}MiB',           swap_use),
-    ('SwapPercent',    'Swap: {}%',             swap_percent),
-    ('Battery',        'Bat: {}',               battery),
-    ('ExternalIP',     'IP: {}',                ext_ip),
+    ('cpu_percent',      'CPU: {:.0f}%',         cpu_percent),
+    ('load1',            'Load1: {}',             load1),
+    ('load5',            'Load5: {}',             load5),
+    ('load15',           'Load15: {}',            load15),
+    ('core_temp',        'CPU temp: {}C',         core_temp),
+    ('gpu_temp',         'GPU temp: {}C',         gpu_temp),
+    ('cpu_freq',         'CPU Freq: {:.0f}MHz',   cpu_freq),
+    ('cpu_max',          'CPU Max: {:.0f}MHz',    cpu_max),
+    ('cpu_count',        'CPU cores: {}',         cpu_count),
+    ('mem_used',         'Mem: {}MiB',            mem_used),
+    ('mem_free',         'MemFree: {}MiB',        mem_free),
+    ('mem_total',        'MemTotal: {}MiB',       mem_total),
+    ('mem_used_percent', 'Mem: {}%',              mem_used_percent),
+    ('swap',             'Swap: {}MiB',           swap_use),
+    ('swap_percent',     'Swap: {}%',             swap_percent),
+    ('battery',          'Bat: {}',               battery),
+    ('external_ip',      'IP: {}',                ext_ip),
 ]
 
 enabled = [
     (fmt, fn)
     for key, fmt, fn in SENSOR_MAP
-    if config.getboolean('Sensors', key, fallback=False)
+    if sensors.get(key, False)
 ]
 
-if config.getboolean('Sensors', 'DiskUsage', fallback=False):
+if sensors.get('disk_usage', False):
     enabled.extend(get_local_disk_sensors())
 
-if config.getboolean('Sensors', 'FanSpeeds', fallback=False):
+if sensors.get('fan_speeds', False):
     enabled.extend(get_fan_sensors())
 
 image_frames = []
 image_sleeptime = 0
-image_path = config.get('Appearance', 'Image', fallback='').strip('"').strip()
+image_path = (appearance.get('image') or '').strip()
 if image_path:
     image_path = os.path.join(SCRIPT_DIR, image_path)
     try:
@@ -99,12 +102,12 @@ def send_frame():
 def blank():
     dev.send_feature_report(bytearray([0x61] + [0x00] * 641))
 
+pages = [enabled[i:i + lines_per_page] for i in range(0, len(enabled), lines_per_page)]
+
 while True:
     if not enabled and not image_frames:
         sleep(delay)
         continue
-
-    pages = [enabled[i:i + lines_per_page] for i in range(0, len(enabled), lines_per_page)]
 
     for page in pages:
         draw_init(draw)
