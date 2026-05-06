@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import os
-import re
 import yaml
 from time import monotonic
 from easyhid import Enumeration
@@ -157,14 +156,10 @@ def cpu_max():
 def cpu_count():
     return psutil.cpu_count()
 
-_EXT_IP_RE = re.compile(r'Address: (\d+\.\d+\.\d+\.\d+)')
-
 @_ttl_cache(300)
 def ext_ip():
     try:
-        d = str(urlopen('http://checkip.dyndns.com/').read())
-        m = _EXT_IP_RE.search(d)
-        return m.group(1) if m else None
+        return urlopen('https://api.ipify.org', timeout=5).read().decode().strip()
     except Exception:
         return None
 
