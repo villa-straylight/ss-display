@@ -73,6 +73,10 @@ def cpu_percent():
     return psutil.cpu_percent(interval=1)
 
 def cpu_freq():
+    with open('/proc/cpuinfo') as f:
+        for line in f:
+            if line.startswith('cpu MHz'):
+                return float(line.split(':')[1].strip())
     return psutil.cpu_freq()[0]
 
 def cpu_max():

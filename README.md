@@ -79,6 +79,9 @@ Set any sensor to `True` to enable it. Sensors are displayed in the order listed
 | `MemUsedPercent` | Memory used % |
 | `Swap` | Swap used (MiB) |
 | `SwapPercent` | Swap used % |
+| `Battery` | Battery level and charge state (e.g. `85%+`) |
+| `DiskUsage` | Usage % for each local mounted filesystem (ext2/3/4, btrfs, xfs, zfs, ntfs, etc.) |
+| `FanSpeeds` | RPM for all available fans |
 | `ExternalIP` | External IP address |
 
 ## Running as a service
