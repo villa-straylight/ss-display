@@ -13,6 +13,8 @@ from functions import (
     mem_used, mem_free, mem_total, mem_used_percent,
     swap_use, swap_percent,
     ext_ip,
+    battery,
+    get_local_disk_sensors, get_fan_sensors,
     load_gif,
     draw_init, draw_text_3, draw_text_4,
 )
@@ -41,6 +43,7 @@ SENSOR_MAP = [
     ('MemUsedPercent', 'Mem: {}%',              mem_used_percent),
     ('Swap',           'Swap: {}MiB',           swap_use),
     ('SwapPercent',    'Swap: {}%',             swap_percent),
+    ('Battery',        'Bat: {}',               battery),
     ('ExternalIP',     'IP: {}',                ext_ip),
 ]
 
@@ -49,6 +52,12 @@ enabled = [
     for key, fmt, fn in SENSOR_MAP
     if config.getboolean('Sensors', key, fallback=False)
 ]
+
+if config.getboolean('Sensors', 'DiskUsage', fallback=False):
+    enabled.extend(get_local_disk_sensors())
+
+if config.getboolean('Sensors', 'FanSpeeds', fallback=False):
+    enabled.extend(get_fan_sensors())
 
 gif_frames = []
 gif_sleeptime = 0

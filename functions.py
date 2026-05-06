@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import configparser
+import os
 import re
 from easyhid import Enumeration
 from urllib.request import urlopen
@@ -83,6 +84,47 @@ def cpu_count():
 def ext_ip():
     d = str(urlopen('http://checkip.dyndns.com/').read())
     return re.compile(r'Address: (\d+\.\d+\.\d+\.\d+)').search(d).group(1)
+
+def battery():
+    b = psutil.sensors_battery()
+    if b is None:
+        return None
+    return "{:.0f}%{}".format(b.percent, "+" if b.power_plugged else "-")
+
+_LOCAL_FSTYPES = {
+    'ext2', 'ext3', 'ext4', 'btrfs', 'xfs', 'zfs',
+    'ntfs', 'exfat', 'f2fs', 'apfs', 'reiserfs', 'jfs',
+}
+
+def get_local_disk_sensors():
+    sensors = []
+    for part in psutil.disk_partitions(all=False):
+        if part.fstype not in _LOCAL_FSTYPES:
+            continue
+        mount = part.mountpoint
+        label = os.path.basename(mount) or '/'
+        fmt = "{}: {{:.0f}}%".format(label)
+        fn = lambda m=mount: psutil.disk_usage(m).percent
+        sensors.append((fmt, fn))
+    return sensors
+
+def get_fan_sensors():
+    def make_fn(name, idx):
+        def fn():
+            entries = psutil.sensors_fans().get(name, [])
+            return entries[idx].current if idx < len(entries) else None
+        return fn
+
+    sensors = []
+    fans = psutil.sensors_fans()
+    if not fans:
+        return sensors
+    for name, entries in fans.items():
+        for i, fan in enumerate(entries):
+            label = name if len(entries) == 1 else "{} {}".format(name, i + 1)
+            fmt = "{}: {{}}rpm".format(label[:10])
+            sensors.append((fmt, make_fn(name, i)))
+    return sensors
 
 def load_gif(path):
     im = Image.open(path)
