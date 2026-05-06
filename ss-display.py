@@ -29,7 +29,6 @@ delay = config.getfloat('Appearance', 'Delay', fallback=2)
 lines_per_page = 3 if font_size >= 12 else 4
 draw_fn = draw_text_3 if lines_per_page == 3 else draw_text_4
 
-# Ordered list of (config key, format string, stat function)
 SENSOR_MAP = [
     ('CpuPercent',     'CPU: {:.0f}%',         cpu_percent),
     ('Load1',          'Load1: {}',             load1),
