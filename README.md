@@ -1,25 +1,92 @@
-# IMPORTANT
-This is a fork of [steelseries-oled](https://github.com/edbgon/steelseries-oled) and is a work in progress. I plan to add more functionality, break a lot of stuff out into functions, add a config file, and a bit more. Right now it'll probably impregnate your cat, cause your fridge to make weird noises, give you an affinity for bears with Unix beards, and otherwise destroy your life. What follows is the original README.md which is probably not accurate at all right now.
+# ss-display
 
-# steelseries-oled
-Python script for displaying images, arbitrary text, or system stuff on various Steelseries keyboard LEDs
+A Python utility for displaying system stats and GIF animations on the OLED screen of supported SteelSeries keyboards. Forked from [steelseries-oled](https://github.com/edbgon/steelseries-oled).
 
+## Supported Devices
 
+- Apex 7
+- Apex 7 TKL
+- Apex Pro
+- Apex 5
 
-# Installation
+## Installation
+
+```bash
+pip install -r requirements.txt
 ```
-Use pip to install easyhid, pillow and if you want to use the statistics app, psutil.
-Windows requires the hidapi.dll file which can be downloaded from the zip file here: https://github.com/libusb/hidapi/releases
+
+## Usage
+
+### System stats display
+
+Configure which sensors to show in `config.ini`, then run:
+
+```bash
+python3 ss-display.py
 ```
 
-# Usage
+Enabled sensors are grouped into pages of 3 (font size 12) or 4 (font size 10) lines and rotate automatically on the configured delay.
+
+### GIF / image display
+
+```bash
+python3 oled.py image.gif
 ```
-python oled.py image.gif
-or
-python sysstats.py
-or
-python profile.py [1-5]
-  where [1-5] is the profile number
+
+Supports animated GIFs and static images. Use `none` to blank the screen:
+
+```bash
+python3 oled.py none
 ```
-# Tools
-Included are two extra tools, one that will display system stats on the OLED and one that will switch profiles.
+
+### Profile switching
+
+```bash
+python3 profile.py [1-5]
+```
+
+## Configuration
+
+All options live in `config.ini`.
+
+### [Appearance]
+
+| Key | Description | Default |
+|-----|-------------|---------|
+| `Font` | TrueType font file (must be in the same directory) | `SpaceMono-Regular.ttf` |
+| `Size` | Font size. 12 fits 3 lines, 10 fits 4 lines | `12` |
+| `Delay` | Seconds to show each page before rotating | `2` |
+| `GIF` | Path to a GIF or image to display as a rotating page | _(blank)_ |
+
+### [Sensors]
+
+Set any sensor to `True` to enable it. Sensors are displayed in the order listed.
+
+| Key | Description |
+|-----|-------------|
+| `CpuPercent` | CPU utilisation % |
+| `Load1` | 1-minute load average |
+| `Load5` | 5-minute load average |
+| `Load15` | 15-minute load average |
+| `CoreTemp` | CPU core temperature (°C) |
+| `GpuTemp` | GPU temperature (°C) |
+| `CpuFreq` | Current CPU frequency (MHz) |
+| `CpuMax` | Maximum CPU frequency (MHz) |
+| `CpuCount` | CPU core count |
+| `MemUsed` | Memory used (MiB) |
+| `MemFree` | Memory free (MiB) |
+| `MemTotal` | Total memory (MiB) |
+| `MemUsedPercent` | Memory used % |
+| `Swap` | Swap used (MiB) |
+| `SwapPercent` | Swap used % |
+| `ExternalIP` | External IP address |
+
+## Running as a service
+
+A sample systemd user service is included:
+
+```bash
+cp ss-display.service ~/.config/systemd/user/
+systemctl --user daemon-reload
+systemctl --user enable --now ss-display
+```
