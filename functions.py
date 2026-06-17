@@ -6,7 +6,6 @@ from easyhid import Enumeration
 from urllib.request import urlopen
 from PIL import Image, ImageSequence
 import psutil
-import GPUtil
 
 
 # Cache wrapper: calls the wrapped function at most once per `ttl` seconds.
@@ -95,8 +94,9 @@ def core_temp():
     return None
 
 def gpu_temp():
-    # NVIDIA
+    # NVIDIA — lazy import so distutils removal in Python 3.14+ doesn't break startup
     try:
+        import GPUtil
         gpus = GPUtil.getGPUs()
         if gpus:
             return gpus[0].temperature
