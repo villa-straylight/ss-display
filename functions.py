@@ -201,6 +201,8 @@ def get_fan_sensors():
         return sensors
     for name, entries in fans.items():
         for i, fan in enumerate(entries):
+            if fan.current == 0:
+                continue
             label = name if len(entries) == 1 else "{} {}".format(name, i + 1)
             fmt = "{}: {{}}rpm".format(label[:10])
             sensors.append((fmt, make_fn(name, i)))

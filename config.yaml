@@ -6,7 +6,7 @@ appearance:
   # Size shouldn't be over 19; 12 = three-line display, 10 = four-line (hard to read)
   size: 12
   # Delay between rotating screens, in seconds
-  delay: 2
+  delay: 5
 
 sensors:
   # Linux-only sensor support
