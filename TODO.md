@@ -20,4 +20,7 @@ A whole bunch of stuff in no particular order as I figure out what needs to be d
 - [x] Switch external IP lookup to HTTPS with timeout
 - [x] Write CHANGELOG
 - [x] Add CHANGELOG to README
+- [x] Filter fans with 0 RPM (unplugged headers)
+- [x] Add device config overrides for non-SteelSeries OLED keyboards
 - [ ] Test and verify AMD GPU temperature support
+- [ ] Test device config overrides against non-SteelSeries hardware
