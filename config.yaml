@@ -1,3 +1,13 @@
+device:
+  # Override these to use a non-SteelSeries keyboard with an OLED display.
+  # Leave commented out to use auto-detection (SteelSeries defaults).
+  # vid: 0x1038       # USB vendor ID (hex)
+  # pid: 0x1612       # USB product ID (hex)
+  # interface: 1      # HID interface number
+  # report_id: 0x61   # HID feature report ID
+  # width: 128        # OLED width in pixels
+  # height: 40        # OLED height in pixels
+
 appearance:
   # Font must be in the same directory as the script (TrueType only)
   font: SpaceMono-Regular.ttf

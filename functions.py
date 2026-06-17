@@ -37,20 +37,26 @@ def init_config(path='config.yaml'):
     with open(path) as f:
         return yaml.safe_load(f)
 
-def getdevice():
-    # Stores an enumeration of all the connected USB HID devices
+def getdevice(device_config=None):
+    cfg = device_config or {}
     en = Enumeration()
 
-    #List of known working devices, add your PID here if it works
+    # Manual override: if vid+pid are both specified, find that exact device
+    if cfg.get('vid') and cfg.get('pid'):
+        vid = int(cfg['vid'])
+        pid = int(cfg['pid'])
+        interface = int(cfg.get('interface', 1))
+        devices = en.find(vid=vid, pid=pid, interface=interface)
+        if not devices:
+            exit("No HID device found with VID=0x{:04x} PID=0x{:04x}, exiting.".format(vid, pid))
+        return devices[0]
+
+    # SteelSeries auto-detection
     #                Apex 7,  7 TKL, Pro     Apex 5
     supported_pid = (0x1612, 0x1618, 0x1610, 0x161c)
-
-    # Return a list of devices based on the search parameters
     devices = en.find(vid=0x1038, interface=1)
     if not devices:
         exit("No SteelSeries devices found, exiting.")
-    # Need to figure out how to handle multiple devices gracefully
-    # for now we pick the first one that shows up
     for device in devices:
         if device.product_id in supported_pid:
             return device
@@ -208,19 +214,19 @@ def get_fan_sensors():
             sensors.append((fmt, make_fn(name, i)))
     return sensors
 
-def load_image(path):
+def load_image(path, width=128, height=40, report_id=0x61):
     im = Image.open(path)
     frames = []
     last_frame = None
     for frame in ImageSequence.Iterator(im):
         last_frame = frame
-        frame = frame.resize((128, 40)).convert('1')
-        frames.append(bytearray([0x61]) + frame.tobytes() + bytearray([0x00]))
+        frame = frame.resize((width, height)).convert('1')
+        frames.append(bytearray([report_id]) + frame.tobytes() + bytearray([0x00]))
     sleeptime = last_frame.info.get('duration', 1000) / 1000
     return frames, sleeptime
 
-def draw_init(draw):
-    draw.rectangle([(0,0),(128,40)], fill=0)
+def draw_init(draw, width=128, height=40):
+    draw.rectangle([(0, 0), (width, height)], fill=0)
 
 def draw_text_3(draw, font, stat_one, stat_two, stat_three):
     draw.text((1,  1), stat_one,   font=font, fill=255)

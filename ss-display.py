@@ -25,6 +25,7 @@ from functions import (
 config = init_config(os.path.join(SCRIPT_DIR, 'config.yaml'))
 appearance = config.get('appearance') or {}
 sensors = config.get('sensors') or {}
+device_cfg = config.get('device') or {}
 
 font_file = os.path.join(SCRIPT_DIR, appearance.get('font') or 'SpaceMono-Regular.ttf')
 font_size = appearance.get('size') or 12
@@ -70,15 +71,19 @@ image_path = (appearance.get('image') or '').strip()
 if image_path:
     image_path = os.path.join(SCRIPT_DIR, image_path)
     try:
-        image_frames, image_sleeptime = load_image(image_path)
+        image_frames, image_sleeptime = load_image(image_path, oled_width, oled_height, report_id)
     except Exception as e:
         print("Could not load image: {}".format(e))
 
-dev = getdevice()
+dev = getdevice(device_cfg)
+
+report_id = int(device_cfg.get('report_id', 0x61))
+oled_width  = int(device_cfg.get('width',  128))
+oled_height = int(device_cfg.get('height',  40))
 
 def signal_handler(sig, frame):
     try:
-        dev.send_feature_report(bytearray([0x61] + [0x00] * 641))
+        dev.send_feature_report(bytearray([report_id] + [0x00] * (_pixel_bytes + 1)))
         dev.close()
         print("\n")
         sys.exit(0)
@@ -92,17 +97,18 @@ if sys.stdout.isatty():
 
 dev.open()
 
-im = Image.new('1', (128, 40))
+im = Image.new('1', (oled_width, oled_height))
 draw = ImageDraw.Draw(im)
 font = ImageFont.truetype(font_file, font_size)
 
-# HID feature report format: 1 byte report ID (0x61) + 640 bytes of pixel data
-# (128×40 pixels at 1 bit each = 640 bytes) + 1 byte terminator = 642 bytes total.
+_pixel_bytes = (oled_width * oled_height) // 8
+
+# HID feature report: 1 byte report ID + pixel data + 1 byte terminator
 def send_frame():
-    dev.send_feature_report(bytearray([0x61]) + im.tobytes() + bytearray([0x00]))
+    dev.send_feature_report(bytearray([report_id]) + im.tobytes() + bytearray([0x00]))
 
 def blank():
-    dev.send_feature_report(bytearray([0x61] + [0x00] * 641))
+    dev.send_feature_report(bytearray([report_id] + [0x00] * (_pixel_bytes + 1)))
 
 pages = [enabled[i:i + lines_per_page] for i in range(0, len(enabled), lines_per_page)]
 
@@ -112,7 +118,7 @@ while True:
         continue
 
     for page in pages:
-        draw_init(draw)
+        draw_init(draw, oled_width, oled_height)
         lines = []
         for fmt, fn in page:
             val = fn()
