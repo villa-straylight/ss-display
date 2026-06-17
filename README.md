@@ -114,6 +114,9 @@ cp ss-display.desktop ~/.local/share/applications/
 
 ### 2026-06-17
 
+#### Added
+- Device config overrides (`vid`, `pid`, `interface`, `report_id`, `width`, `height`) under a `device:` section in `config.yaml` to support non-SteelSeries OLED keyboards; SteelSeries auto-detection is unchanged when these are omitted
+
 #### Changed
 - Screen rotation delay increased from 2s to 5s
 - Fan sensors now skip headers with no fan attached (RPM == 0) at startup
