@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-06-17
+
+### Changed
+- Screen rotation delay increased from 2s to 5s
+- Fan sensors now skip headers with no fan attached (RPM == 0) at startup
+
+---
+
 ## 2026-05-06
 
 ### Security
